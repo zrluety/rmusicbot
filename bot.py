@@ -6,6 +6,9 @@ import spotipy
 import spotipy.util as util
 import requests
 
+from requests.exceptions import HTTPError
+from pprint import pprint
+
 def parse_title_for_song_detail(title):
     """Get song detail from submission title."""
     # r/music posts should include the artist name, song name, and genre in the
@@ -50,7 +53,7 @@ def main(n=10):
         if song:
             songs.append(song)
         
-        if len(songs) > n:
+        if len(songs) >= n:
             break
 
     spotify_config = configparser.ConfigParser()
@@ -73,8 +76,11 @@ def main(n=10):
         result = spotify.search(q=song.get('name'), limit=1)
 
         # get the track id
-        track = result.get('tracks').get('items')[0].get('id')
-        tracks.append(track)
+        try:
+            track = result.get('tracks').get('items')[0].get('id')
+            tracks.append(track)
+        except HTTPError:
+            continue
 
     # get playlists
     playlist = spotify.user_playlist_add_tracks(
